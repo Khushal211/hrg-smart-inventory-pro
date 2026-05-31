@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Suppliers / HRG Inventory{% endblock %}
+{% block page_name %}Suppliers{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Suppliers</h1>
+    <p>Vendor directory with lead time, ratings, and linked purchase orders.</p>
+  </div>
+</div>
+
+{% if can_manage %}
+<section class="card" style="margin-bottom:14px;">
+  <div class="card-title">Add Supplier</div>
+  <form method="post">
+    <div class="form-grid">
+      <div class="field"><label>Name</label><input name="name" required></div>
+      <div class="field"><label>Contact Person</label><input name="contact"></div>
+      <div class="field"><label>Phone</label><input name="phone"></div>
+      <div class="field">
+        <label>Category</label>
+        <select name="category">{% for item in categories %}<option>{{ item }}</option>{% endfor %}</select>
+      </div>
+      <div class="field"><label>Rating</label><input type="number" min="1" max="5" name="rating" value="4"></div>
+      <div class="field"><label>Lead Days</label><input type="number" min="0" name="lead_days" value="3"></div>
+      <div class="field form-full"><label>Notes</label><textarea name="notes"></textarea></div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:14px;">Save Supplier</button>
+  </form>
+</section>
+{% endif %}
+
+<div class="grid-3">
+  {% for supplier in suppliers %}
+  <section class="card">
+    <div class="card-title">{{ supplier.name }}</div>
+    <div class="summary-list">
+      <div class="summary-row"><span class="muted">Contact</span><strong>{{ supplier.contact or "Not provided" }}</strong></div>
+      <div class="summary-row"><span class="muted">Phone</span><span class="mono">{{ supplier.phone or "-" }}</span></div>
+      <div class="summary-row"><span class="muted">Category</span><span>{{ supplier.category }}</span></div>
+      <div class="summary-row"><span class="muted">Rating</span><span>{{ supplier.rating }}/5</span></div>
+      <div class="summary-row"><span class="muted">Lead Time</span><span>{{ supplier.lead_days }} days</span></div>
+      <div class="summary-row"><span class="muted">Materials</span><span>{{ supplier.materials|length }}</span></div>
+    </div>
+    {% if supplier.notes %}<p class="muted">{{ supplier.notes }}</p>{% endif %}
+
+    {% if can_manage %}
+    <form method="post" action="{{ url_for('supplier_edit', supplier_id=supplier.id) }}" style="margin-top:12px;">
+      <input type="hidden" name="name" value="{{ supplier.name }}">
+      <input type="hidden" name="contact" value="{{ supplier.contact or '' }}">
+      <input type="hidden" name="phone" value="{{ supplier.phone or '' }}">
+      <input type="hidden" name="category" value="{{ supplier.category }}">
+      <input type="hidden" name="notes" value="{{ supplier.notes or '' }}">
+      <div class="form-grid">
+        <div class="field"><label>Rating</label><input type="number" name="rating" min="1" max="5" value="{{ supplier.rating }}"></div>
+        <div class="field"><label>Lead Days</label><input type="number" name="lead_days" min="0" value="{{ supplier.lead_days }}"></div>
+      </div>
+      <button class="btn btn-small" style="margin-top:10px;">Update Performance</button>
+    </form>
+    {% endif %}
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

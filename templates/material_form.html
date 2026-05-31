@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if material else 'Add' }} Material / HRG Inventory{% endblock %}
+{% block page_name %}{{ 'Edit Material' if material else 'Add Material' }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ 'Edit Material' if material else 'Add Material' }}</h1>
+    <p>Managers and admins can maintain the central material master.</p>
+  </div>
+  <a class="btn" href="{{ url_for('inventory') }}">Back to Inventory</a>
+</div>
+
+<section class="card" style="max-width:760px;">
+  <form method="post">
+    <div class="form-grid">
+      <div class="field form-full">
+        <label>Material Name</label>
+        <input name="name" value="{{ material.name if material else '' }}" required>
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <select name="category">
+          {% for item in categories %}
+          <option value="{{ item }}" {{ 'selected' if material and material.category == item else '' }}>{{ item }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Unit</label>
+        <select name="unit">
+          {% for item in units %}
+          <option value="{{ item }}" {{ 'selected' if material and material.unit == item else '' }}>{{ item }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Current Quantity</label>
+        <input type="number" step="0.01" name="quantity" value="{{ material.quantity if material else 0 }}" required>
+      </div>
+      <div class="field">
+        <label>Minimum Reorder Level</label>
+        <input type="number" step="0.01" name="min_level" value="{{ material.min_level if material else 0 }}" required>
+      </div>
+      <div class="field">
+        <label>Rate per Unit</label>
+        <input type="number" step="0.01" name="rate" value="{{ material.rate if material else 0 }}" required>
+      </div>
+      <div class="field">
+        <label>Supplier</label>
+        <select name="supplier_id">
+          <option value="">Not assigned</option>
+          {% for supplier in suppliers %}
+          <option value="{{ supplier.id }}" {{ 'selected' if material and material.supplier_id == supplier.id else '' }}>{{ supplier.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field form-full">
+        <label>Notes</label>
+        <textarea name="notes">{{ material.notes if material else '' }}</textarea>
+      </div>
+    </div>
+    <div class="actions" style="margin-top:14px;">
+      <button class="btn btn-primary">{{ 'Update Material' if material else 'Create Material' }}</button>
+      <a class="btn" href="{{ url_for('inventory') }}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login / HRG Smart Inventory Pro</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+  <main class="auth-page">
+    <section class="auth-card">
+      <div class="brand-mark">HRG</div>
+      <h1>Smart Inventory Pro</h1>
+      <p class="muted">Secure role-based access for construction inventory operations.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-stack" style="margin-top:16px;">
+          {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      {% endwith %}
+
+      <form method="post" style="margin-top:18px;">
+        <div class="form-grid">
+          <div class="field form-full">
+            <label>Email</label>
+            <input type="email" name="email" value="admin@hrg.com" required>
+          </div>
+          <div class="field form-full">
+            <label>Password</label>
+            <input type="password" name="password" value="admin123" required>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:14px;">Login</button>
+      </form>
+
+      <div class="demo-logins">
+        <strong>Demo users</strong>
+        <span>Admin: admin@hrg.com / admin123</span>
+        <span>Manager: manager@hrg.com / manager123</span>
+        <span>Viewer: viewer@hrg.com / viewer123</span>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

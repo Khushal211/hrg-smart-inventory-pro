@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Log / HRG Inventory{% endblock %}
+{% block page_name %}Activity Log{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Activity Log</h1>
+    <p>Full audit trail for stock in, stock out, and delivered purchase orders.</p>
+  </div>
+</div>
+
+<section class="card">
+  <form class="filter-row" method="get">
+    <div class="field">
+      <label>Type</label>
+      <select name="type">
+        <option value="">All movements</option>
+        <option value="Stock In" {{ 'selected' if filter_type == 'Stock In' else '' }}>Stock In</option>
+        <option value="Stock Out" {{ 'selected' if filter_type == 'Stock Out' else '' }}>Stock Out</option>
+      </select>
+    </div>
+    <button class="btn btn-blue" style="align-self:end;">Apply</button>
+  </form>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Material</th>
+          <th>Quantity</th>
+          <th>Value</th>
+          <th>Site</th>
+          <th>Reference</th>
+          <th>Created By</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for txn in transactions %}
+        <tr>
+          <td class="mono">{{ txn.transaction_date }}</td>
+          <td><span class="pill status-{{ 'ok' if txn.transaction_type == 'Stock In' else 'info' }}">{{ txn.transaction_type }}</span></td>
+          <td><strong>{{ txn.material.name }}</strong><div class="muted">{{ txn.details or "" }}</div></td>
+          <td class="mono">{{ '+' if txn.transaction_type == 'Stock In' else '-' }}{{ txn.quantity|num }} {{ txn.material.unit }}</td>
+          <td class="mono">{{ txn.value|currency }}</td>
+          <td>{{ txn.site.name if txn.site else "Central" }}</td>
+          <td class="mono">{{ txn.reference_no or "-" }}</td>
+          <td>{{ txn.created_by.name if txn.created_by else "System" }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="muted">No transactions match the selected filter.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

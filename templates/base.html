@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}HRG Smart Inventory Pro{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="{{ url_for('static', filename='js/chart-fallback.js') }}"></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">HRG</div>
+        <div>
+          <div class="brand-title">HRG Construction</div>
+          <div class="brand-subtitle">Smart Inventory Pro</div>
+        </div>
+      </div>
+
+      <nav>
+        <div class="nav-section">
+          <div class="nav-label">Overview</div>
+          <a class="nav-link {{ 'active' if active_page == 'dashboard' else '' }}" href="{{ url_for('dashboard') }}">
+            <span class="nav-token">DB</span>Dashboard
+          </a>
+          <a class="nav-link {{ 'active' if active_page == 'forecast' else '' }}" href="{{ url_for('forecast') }}">
+            <span class="nav-token">AI</span>Forecasting
+          </a>
+          <a class="nav-link {{ 'active' if active_page == 'analytics' else '' }}" href="{{ url_for('analytics') }}">
+            <span class="nav-token">AN</span>Analytics
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-label">Inventory</div>
+          <a class="nav-link {{ 'active' if active_page == 'inventory' else '' }}" href="{{ url_for('inventory') }}">
+            <span class="nav-token">MT</span>Materials
+          </a>
+          {% if can_manage %}
+          <a class="nav-link {{ 'active' if active_page == 'material_new' else '' }}" href="{{ url_for('material_new') }}">
+            <span class="nav-token">AD</span>Add Material
+          </a>
+          {% endif %}
+          <a class="nav-link {{ 'active' if active_page == 'suppliers' else '' }}" href="{{ url_for('suppliers') }}">
+            <span class="nav-token">SP</span>Suppliers
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-label">Operations</div>
+          <a class="nav-link {{ 'active' if active_page == 'stock' else '' }}" href="{{ url_for('stock') }}">
+            <span class="nav-token">ST</span>Stock In / Out
+          </a>
+          <a class="nav-link {{ 'active' if active_page == 'purchase_orders' else '' }}" href="{{ url_for('purchase_orders') }}">
+            <span class="nav-token">PO</span>Purchase Orders
+          </a>
+          <a class="nav-link {{ 'active' if active_page == 'sites' else '' }}" href="{{ url_for('sites') }}">
+            <span class="nav-token">SI</span>Sites
+          </a>
+          <a class="nav-link {{ 'active' if active_page == 'activity' else '' }}" href="{{ url_for('activity') }}">
+            <span class="nav-token">LG</span>Activity Log
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-foot">
+        <span class="role-pill">{{ current_user.role }}</span>
+        <div style="margin-top:8px;">Persistent database mode</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <strong>{% block page_name %}Inventory Control{% endblock %}</strong>
+          <span>{{ today.strftime("%d %b %Y") }} / HRG Construction</span>
+        </div>
+        <div class="actions">
+          <span class="role-pill">{{ current_user.name }}</span>
+          <a class="btn btn-small" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </header>
+
+      <section class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+          <div class="flash-stack">
+            {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </section>
+    </main>
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

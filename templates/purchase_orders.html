@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Purchase Orders / HRG Inventory{% endblock %}
+{% block page_name %}Purchase Orders{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Purchase Order Management</h1>
+    <p>Create, approve, deliver, or cancel purchase orders with database tracking.</p>
+  </div>
+</div>
+
+{% if can_manage %}
+<section class="card" style="margin-bottom:14px;">
+  <div class="card-title">Create Purchase Order</div>
+  <form method="post">
+    <div class="form-grid">
+      <div class="field">
+        <label>Supplier</label>
+        <select name="supplier_id" required>
+          {% for supplier in suppliers %}
+          <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Material</label>
+        <select name="material_id" required>
+          {% for material in materials %}
+          <option value="{{ material.id }}">{{ material.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Site</label>
+        <select name="site_id">
+          <option value="">Central warehouse</option>
+          {% for site in sites %}
+          <option value="{{ site.id }}">{{ site.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Expected Delivery</label>
+        <input type="date" name="expected_delivery">
+      </div>
+      <div class="field">
+        <label>Quantity</label>
+        <input type="number" step="0.01" min="0.01" name="quantity" required>
+      </div>
+      <div class="field">
+        <label>Rate</label>
+        <input type="number" step="0.01" min="0" name="rate" required>
+      </div>
+      <div class="field form-full">
+        <label>Notes</label>
+        <textarea name="notes"></textarea>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:14px;">Create PO</button>
+  </form>
+</section>
+{% endif %}
+
+<section class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>PO No.</th>
+          <th>Supplier</th>
+          <th>Material</th>
+          <th>Site</th>
+          <th>Qty</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Expected</th>
+          {% if can_manage %}<th>Actions</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in purchase_orders %}
+        <tr>
+          <td><strong>{{ order.po_number }}</strong><div class="muted">By {{ order.created_by.name if order.created_by else "System" }}</div></td>
+          <td>{{ order.supplier.name }}</td>
+          <td>{{ order.material.name }}</td>
+          <td>{{ order.site.name if order.site else "Central" }}</td>
+          <td class="mono">{{ order.quantity|num }}</td>
+          <td class="mono">{{ order.total_value|currency }}</td>
+          <td>
+            <span class="pill status-{{ 'warn' if order.status == 'Pending' else 'info' if order.status == 'Approved' else 'ok' if order.status == 'Delivered' else 'danger' }}">
+              {{ order.status }}
+            </span>
+          </td>
+          <td>{{ order.expected_delivery or "-" }}</td>
+          {% if can_manage %}
+          <td>
+            <div class="actions">
+              {% if order.status == "Pending" %}
+              <form method="post" action="{{ url_for('purchase_order_action', order_id=order.id, action='approve') }}"><button class="btn btn-small">Approve</button></form>
+              {% endif %}
+              {% if order.status in ["Pending", "Approved"] %}
+              <form method="post" action="{{ url_for('purchase_order_action', order_id=order.id, action='deliver') }}"><button class="btn btn-small btn-primary">Deliver</button></form>
+              <form method="post" action="{{ url_for('purchase_order_action', order_id=order.id, action='cancel') }}"><button class="btn btn-small btn-danger">Cancel</button></form>
+              {% endif %}
+            </div>
+          </td>
+          {% endif %}
+        </tr>
+        {% else %}
+        <tr><td colspan="9" class="muted">No purchase orders yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

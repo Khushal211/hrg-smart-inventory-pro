@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Forecasting / HRG Inventory{% endblock %}
+{% block page_name %}AI Forecasting{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Demand Forecasting Model</h1>
+    <p>Linear Regression estimates the next month requirement from historical stock-out data.</p>
+  </div>
+  <a class="btn btn-blue" href="{{ url_for('purchase_orders') }}">Review Purchase Orders</a>
+</div>
+
+<section class="card" style="margin-bottom:14px;">
+  <div class="grid-3">
+    <div>
+      <div class="stat-label">Model</div>
+      <div class="stat-value" style="font-size:22px;">Linear Regression</div>
+      <div class="stat-note">scikit-learn with average fallback</div>
+    </div>
+    <div>
+      <div class="stat-label">Input</div>
+      <div class="stat-value" style="font-size:22px;">Stock-Out History</div>
+      <div class="stat-note">monthly consumption by material</div>
+    </div>
+    <div>
+      <div class="stat-label">Output</div>
+      <div class="stat-value" style="font-size:22px;">Reorder Qty</div>
+      <div class="stat-note">predicted demand plus safety level</div>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Material</th>
+          <th>Current Stock</th>
+          <th>Predicted Demand</th>
+          <th>Remaining Days</th>
+          <th>Recommended Purchase</th>
+          <th>Usage Data</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in forecast_rows %}
+        <tr>
+          <td><strong>{{ row.material.name }}</strong><div class="muted">{{ row.avg_daily|num }} {{ row.material.unit }}/day average</div></td>
+          <td class="mono">{{ row.material.quantity|num }} {{ row.material.unit }}</td>
+          <td class="mono">{{ row.predicted_demand|num }} {{ row.material.unit }}</td>
+          <td>
+            {% if row.remaining_days %}
+            {{ row.remaining_days }} days
+            {% else %}
+            <span class="muted">No usage trend</span>
+            {% endif %}
+          </td>
+          <td class="mono"><strong>{{ row.recommended_purchase|num }} {{ row.material.unit }}</strong></td>
+          <td>{{ row.history_months }} months</td>
+          <td>
+            {% if row.recommended_purchase > 0 %}
+            <span class="pill status-warn">Reorder</span>
+            {% else %}
+            <span class="pill status-ok">Healthy</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

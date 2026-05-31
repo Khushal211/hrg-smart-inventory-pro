@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard / HRG Inventory{% endblock %}
+{% block page_name %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Dashboard</h1>
+    <p>Live stock, purchase order, supplier, and site movement overview.</p>
+  </div>
+  {% if can_manage %}
+  <div class="actions">
+    <a class="btn btn-primary" href="{{ url_for('stock') }}">Record Stock</a>
+    <a class="btn btn-blue" href="{{ url_for('purchase_orders') }}">Create PO</a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="grid-4" style="margin-bottom:14px;">
+  <div class="card stat">
+    <div class="stat-label">Inventory Value</div>
+    <div class="stat-value">{{ stats.total_inventory_value|currency }}</div>
+    <div class="stat-note">{{ stats.total_materials }} material types</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-label">Pending Orders</div>
+    <div class="stat-value">{{ stats.pending_orders }}</div>
+    <div class="stat-note">purchase approvals waiting</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-label">Active Suppliers</div>
+    <div class="stat-value">{{ stats.active_suppliers }}</div>
+    <div class="stat-note">{{ stats.active_sites }} active construction sites</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-label">Monthly Consumption</div>
+    <div class="stat-value">{{ stats.monthly_consumption|currency }}</div>
+    <div class="stat-note">{{ stats.low_stock }} low stock / {{ stats.out_stock }} out</div>
+  </div>
+</div>
+
+<div class="grid-main" style="margin-bottom:14px;">
+  <section class="card">
+    <div class="card-title">Inventory Value Distribution</div>
+    <div class="chart-box"><canvas id="categoryChart"></canvas></div>
+  </section>
+
+  <section class="card">
+    <div class="card-title">Stock Alerts</div>
+    <div class="summary-list">
+      {% for material in low_materials if material.status_slug != "ok" %}
+      <div class="summary-row">
+        <div>
+          <strong>{{ material.name }}</strong>
+          <div class="muted">{{ material.quantity|num }} {{ material.unit }} available</div>
+        </div>
+        <span class="pill status-{{ material.status_slug }}">{{ material.status_label }}</span>
+      </div>
+      {% else %}
+      <p class="muted">All materials are above their reorder level.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <div class="card-title">Monthly Consumption Trend</div>
+    <div class="chart-box"><canvas id="consumptionChart"></canvas></div>
+  </section>
+
+  <section class="card">
+    <div class="card-title">Recent Activity</div>
+    <div class="timeline">
+      {% for txn in recent_transactions %}
+      <div class="timeline-item">
+        <span class="dot" style="background:{{ '#38a169' if txn.transaction_type == 'Stock In' else '#3182ce' }}"></span>
+        <div>
+          <strong>{{ txn.material.name }}</strong>
+          <div class="muted">{{ txn.transaction_type }} / {{ txn.details or txn.reference_no or "Manual entry" }}</div>
+        </div>
+        <div class="mono">{{ '+' if txn.transaction_type == 'Stock In' else '-' }}{{ txn.quantity|num }}</div>
+      </div>
+      {% else %}
+      <p class="muted">No transactions yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const payload = {{ chart_data|tojson }};
+const gridColor = 'rgba(255,255,255,0.07)';
+const textColor = '#9ba7a3';
+
+new Chart(document.getElementById('categoryChart'), {
+  type: 'doughnut',
+  data: {
+    labels: payload.categoryLabels,
+    datasets: [{
+      data: payload.categoryValues,
+      backgroundColor: ['#3182ce', '#38a169', '#d69e2e', '#805ad5', '#e53e3e', '#4fd1c5', '#ed8936'],
+      borderColor: '#171a1f',
+      borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { color: textColor } } }
+  }
+});
+
+new Chart(document.getElementById('consumptionChart'), {
+  type: 'line',
+  data: {
+    labels: payload.monthLabels,
+    datasets: [
+      { label: 'Stock Out Value', data: payload.consumptionValues, borderColor: '#3182ce', backgroundColor: 'rgba(49,130,206,0.2)', tension: 0.35, fill: true },
+      { label: 'Stock In Value', data: payload.stockInValues, borderColor: '#38a169', backgroundColor: 'rgba(56,161,105,0.12)', tension: 0.35 }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: textColor } } },
+    scales: {
+      x: { ticks: { color: textColor }, grid: { color: gridColor } },
+      y: { ticks: { color: textColor }, grid: { color: gridColor } }
+    }
+  }
+});
+</script>
+{% endblock %}

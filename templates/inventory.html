@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Materials / HRG Inventory{% endblock %}
+{% block page_name %}Materials{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>All Materials</h1>
+    <p>Database-backed stock with reorder levels, rates, suppliers, and live status.</p>
+  </div>
+  <div class="actions">
+    <a class="btn" href="{{ url_for('export_inventory') }}">Export CSV</a>
+    {% if can_manage %}
+    <a class="btn btn-primary" href="{{ url_for('material_new') }}">Add Material</a>
+    {% endif %}
+  </div>
+</div>
+
+<section class="card">
+  <form class="filter-row" method="get">
+    <div class="field">
+      <label>Search</label>
+      <input name="q" value="{{ search }}" placeholder="Material name">
+    </div>
+    <div class="field">
+      <label>Category</label>
+      <select name="category">
+        <option value="">All categories</option>
+        {% for item in categories %}
+        <option value="{{ item }}" {{ 'selected' if item == category else '' }}>{{ item }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <select name="status">
+        <option value="">All status</option>
+        <option value="ok" {{ 'selected' if status == 'ok' else '' }}>In Stock</option>
+        <option value="warn" {{ 'selected' if status == 'warn' else '' }}>Low Stock</option>
+        <option value="danger" {{ 'selected' if status == 'danger' else '' }}>Out of Stock</option>
+      </select>
+    </div>
+    <button class="btn btn-blue" style="align-self:end;">Apply</button>
+  </form>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Material</th>
+          <th>Category</th>
+          <th>Stock</th>
+          <th>Min Level</th>
+          <th>Rate</th>
+          <th>Value</th>
+          <th>Supplier</th>
+          <th>Status</th>
+          {% if can_manage %}<th>Actions</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for material in materials %}
+        <tr>
+          <td><strong>{{ material.name }}</strong><div class="muted">{{ material.notes or "" }}</div></td>
+          <td>{{ material.category }}</td>
+          <td class="mono">{{ material.quantity|num }} {{ material.unit }}</td>
+          <td class="mono">{{ material.min_level|num }}</td>
+          <td class="mono">{{ material.rate|currency }}</td>
+          <td class="mono">{{ material.value|currency }}</td>
+          <td>{{ material.supplier.name if material.supplier else "Not assigned" }}</td>
+          <td><span class="pill status-{{ material.status_slug }}">{{ material.status_label }}</span></td>
+          {% if can_manage %}
+          <td><a class="btn btn-small" href="{{ url_for('material_edit', material_id=material.id) }}">Edit</a></td>
+          {% endif %}
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9" class="muted">No materials match the current filter.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Stock Movement / HRG Inventory{% endblock %}
+{% block page_name %}Stock In / Out{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Stock In / Out</h1>
+    <p>Record incoming stock and site-wise material issue transactions.</p>
+  </div>
+</div>
+
+<div class="grid-main">
+  <section class="card">
+    <div class="card-title">Record Movement</div>
+    {% if can_manage %}
+    <form method="post">
+      <div class="form-grid">
+        <div class="field">
+          <label>Movement Type</label>
+          <select name="transaction_type" required>
+            <option>Stock In</option>
+            <option>Stock Out</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Date</label>
+          <input type="date" name="transaction_date" value="{{ today.isoformat() }}">
+        </div>
+        <div class="field form-full">
+          <label>Material</label>
+          <select name="material_id" required>
+            {% for material in materials %}
+            <option value="{{ material.id }}">{{ material.name }} / {{ material.quantity|num }} {{ material.unit }} available</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Quantity</label>
+          <input type="number" step="0.01" min="0.01" name="quantity" required>
+        </div>
+        <div class="field">
+          <label>Rate</label>
+          <input type="number" step="0.01" min="0" name="rate" placeholder="Uses material rate if blank">
+        </div>
+        <div class="field">
+          <label>Site</label>
+          <select name="site_id">
+            <option value="">Central warehouse</option>
+            {% for site in sites %}
+            <option value="{{ site.id }}">{{ site.name }} / {{ site.code }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Project Code</label>
+          <input name="project_code" placeholder="JP-2026-01">
+        </div>
+        <div class="field">
+          <label>Reference No.</label>
+          <input name="reference_no" placeholder="INV-1005 or ISS-2040">
+        </div>
+        <div class="field form-full">
+          <label>Details</label>
+          <textarea name="details" placeholder="Supplier invoice, receiver name, purpose, or authorization details"></textarea>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:14px;">Save Transaction</button>
+    </form>
+    {% else %}
+    <p class="muted">Viewer role can inspect movements but cannot create new stock transactions.</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <div class="card-title">Recent Movements</div>
+    <div class="timeline">
+      {% for txn in recent %}
+      <div class="timeline-item">
+        <span class="dot" style="background:{{ '#38a169' if txn.transaction_type == 'Stock In' else '#3182ce' }}"></span>
+        <div>
+          <strong>{{ txn.material.name }}</strong>
+          <div class="muted">{{ txn.transaction_date }} / {{ txn.site.name if txn.site else "Central warehouse" }}</div>
+          <div class="muted">{{ txn.details or txn.reference_no or "" }}</div>
+        </div>
+        <span class="mono">{{ '+' if txn.transaction_type == 'Stock In' else '-' }}{{ txn.quantity|num }}</span>
+      </div>
+      {% else %}
+      <p class="muted">No stock transactions have been recorded.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

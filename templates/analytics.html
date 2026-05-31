@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics / HRG Inventory{% endblock %}
+{% block page_name %}Advanced Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Advanced Dashboard</h1>
+    <p>Business KPIs and Chart.js visualizations for inventory, suppliers, and purchase orders.</p>
+  </div>
+</div>
+
+<div class="grid-4" style="margin-bottom:14px;">
+  <div class="card stat">
+    <div class="stat-label">Total Inventory Value</div>
+    <div class="stat-value">{{ stats.total_inventory_value|currency }}</div>
+    <div class="stat-note">central warehouse value</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-label">Pending Orders</div>
+    <div class="stat-value">{{ stats.pending_orders }}</div>
+    <div class="stat-note">awaiting approval</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-label">Active Suppliers</div>
+    <div class="stat-value">{{ stats.active_suppliers }}</div>
+    <div class="stat-note">vendor network</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-label">Monthly Consumption</div>
+    <div class="stat-value">{{ stats.monthly_consumption|currency }}</div>
+    <div class="stat-note">stock issued this month</div>
+  </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:14px;">
+  <section class="card">
+    <div class="card-title">Inventory Value Distribution</div>
+    <div class="chart-box"><canvas id="categoryChart"></canvas></div>
+  </section>
+  <section class="card">
+    <div class="card-title">Monthly Consumption Trend</div>
+    <div class="chart-box"><canvas id="monthlyChart"></canvas></div>
+  </section>
+</div>
+
+<div class="grid-2" style="margin-bottom:14px;">
+  <section class="card">
+    <div class="card-title">Supplier Performance</div>
+    <div class="chart-box"><canvas id="supplierChart"></canvas></div>
+  </section>
+  <section class="card">
+    <div class="card-title">Purchase Order Trend</div>
+    <div class="chart-box"><canvas id="poChart"></canvas></div>
+  </section>
+</div>
+
+<section class="card">
+  <div class="card-title">Supplier Scorecard</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Supplier</th><th>Rating</th><th>Lead Days</th><th>Orders</th><th>Delivered</th><th>Delivery Rate</th><th>PO Value</th></tr>
+      </thead>
+      <tbody>
+        {% for row in supplier_rows %}
+        <tr>
+          <td><strong>{{ row.supplier.name }}</strong></td>
+          <td>{{ row.supplier.rating }}/5</td>
+          <td>{{ row.supplier.lead_days }}</td>
+          <td>{{ row.orders }}</td>
+          <td>{{ row.delivered }}</td>
+          <td>{{ row.delivery_rate|num }}%</td>
+          <td>{{ row.value|currency }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const payload = {{ chart_data|tojson }};
+const gridColor = 'rgba(255,255,255,0.07)';
+const textColor = '#9ba7a3';
+
+new Chart(document.getElementById('categoryChart'), {
+  type: 'doughnut',
+  data: {
+    labels: payload.categoryLabels,
+    datasets: [{ data: payload.categoryValues, backgroundColor: ['#3182ce', '#38a169', '#d69e2e', '#805ad5', '#e53e3e', '#4fd1c5', '#ed8936'], borderColor: '#171a1f', borderWidth: 2 }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor } } } }
+});
+
+new Chart(document.getElementById('monthlyChart'), {
+  type: 'bar',
+  data: {
+    labels: payload.monthLabels,
+    datasets: [{ label: 'Stock Out Value', data: payload.consumptionValues, backgroundColor: 'rgba(49,130,206,0.65)', borderColor: '#3182ce', borderWidth: 1 }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: textColor } } }, scales: { x: { ticks: { color: textColor }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } } }
+});
+
+new Chart(document.getElementById('supplierChart'), {
+  type: 'bar',
+  data: {
+    labels: payload.supplierLabels,
+    datasets: [{ label: 'Performance Score', data: payload.supplierScores, backgroundColor: 'rgba(56,161,105,0.7)', borderColor: '#38a169', borderWidth: 1 }]
+  },
+  options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: textColor } } }, scales: { x: { min: 0, max: 100, ticks: { color: textColor }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } } }
+});
+
+new Chart(document.getElementById('poChart'), {
+  type: 'line',
+  data: {
+    labels: payload.poLabels,
+    datasets: [{ label: 'PO Count', data: payload.poCounts, borderColor: '#d69e2e', backgroundColor: 'rgba(214,158,46,0.18)', tension: 0.35, fill: true }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: textColor } } }, scales: { x: { ticks: { color: textColor }, grid: { color: gridColor } }, y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } } } }
+});
+</script>
+{% endblock %}
