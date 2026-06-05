@@ -1,0 +1,10 @@
+.env
+.venv/
+venv/
+instance/
+__pycache__/
+*.pyc
+*.db
+*.sqlite
+screenshots/
+requirements-ml-optional.txt
