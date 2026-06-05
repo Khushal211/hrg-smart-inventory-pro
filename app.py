@@ -210,10 +210,16 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 
+def default_database_url():
+    if os.getenv("VERCEL"):
+        return "sqlite:////tmp/hrg_inventory_dev.db"
+    return "sqlite:///hrg_inventory_dev.db"
+
+
 def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-change-this-secret")
-    database_url = os.getenv("DATABASE_URL", "sqlite:///hrg_inventory_dev.db")
+    database_url = os.getenv("DATABASE_URL") or default_database_url()
     if database_url.startswith("mysql://"):
         database_url = database_url.replace("mysql://", "mysql+pymysql://", 1)
     app.config["SQLALCHEMY_DATABASE_URI"] = database_url
